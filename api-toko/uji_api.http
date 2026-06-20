@@ -1,5 +1,0 @@
-### GET semua barang
-GET http://localhost/api-toko/get_barang.php
-
-### GET dengan parameter (opsional - tambahkan jika perlu)
-GET http://localhost/api-toko/get_barang.php?id=1
