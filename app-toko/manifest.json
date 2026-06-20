@@ -1,0 +1,25 @@
+{
+    "name": "Aplikasi Toko Keren - PWA",
+    "short_name": "AppToko",
+    "description": "Aplikasi pencatat barang PWA dengan autentikasi token",
+    "start_url": "/app-toko/",
+    "scope": "/app-toko/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#14b8a6",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/app-toko/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/app-toko/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
