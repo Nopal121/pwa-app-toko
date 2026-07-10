@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>PWA App Toko - Manajemen Barang</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- QR Scanner CDN (P14) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Manifest & PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" href="icons/icon-192.png">
+
+    <!-- Theme & Status Bar -->
+    <meta name="theme-color" content="#14b8a6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="App Toko">
+</head>
+
+<body class="bg-gradient-to-br from-teal-100 via-cyan-50 to-blue-100 min-h-screen p-4 md:p-6">
+    <div class="max-w-6xl mx-auto">
+
+        <!-- ==================== HEADER ==================== -->
+        <div class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl p-6 mb-8 border border-white/40">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-teal-700">
+                        📦 PWA App Toko
+                    </h1>
+                    <p class="text-gray-600 mt-2">
+                        <i class="fas fa-qrcode text-purple-500 mr-1"></i> Smart QR Gateway
+                        <i class="fas fa-chevron-right mx-1 text-gray-300"></i>
+                        <i class="fas fa-chart-bar text-teal-500 mr-1"></i> Dashboard
+                        <i class="fas fa-chevron-right mx-1 text-gray-300"></i>
+                        <i class="fas fa-search text-teal-500 mr-1"></i> Live Search
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <!-- Tombol Scan QR -->
+                    <button onclick="bukaModalQrScan('search')"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-qrcode mr-2"></i> Scan QR
+                    </button>
+                    <button onclick="window.location.href='#dashboard'"
+                        class="bg-teal-500 hover:bg-teal-600 text-white px-5 py-3 rounded-xl shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-chart-bar mr-2"></i> Dashboard
+                    </button>
+                    <button onclick="bukaCetakLaporan()"
+                        class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-print mr-2"></i> Cetak
+                    </button>
+                    <button onclick="logout()"
+                        class="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-xl shadow-lg transition transform hover:scale-105">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== FORM TAMBAH/EDIT ==================== -->
+        <div class="bg-white/80 backdrop-blur-lg shadow-xl rounded-3xl p-6 mb-8 border border-white/40">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-5">
+                <i class="fas fa-plus-circle text-teal-500 mr-2"></i> Tambah / Edit Barang
+            </h2>
+            <form id="form-barang" enctype="multipart/form-data" class="grid gap-4">
+                <input type="hidden" id="barang-id">
+
+                <!-- Baris 1: Nama, Harga, Stok -->
+                <div class="grid md:grid-cols-3 gap-4">
+                    <input type="text" id="nama" name="nama" placeholder="Nama Barang" required
+                        class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    <input type="number" id="harga" name="harga" placeholder="Harga" required
+                        class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    <input type="number" id="stok" name="stok" placeholder="Stok" required
+                        class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                </div>
+
+                <!-- Baris 2: Gambar -->
+                <div class="grid md:grid-cols-1 gap-4">
+                    <input type="file" id="gambar" name="gambar" accept="image/*"
+                        class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                </div>
+
+                <!-- ====== BARIS 3: QR CODE (P14) ====== -->
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-qrcode text-purple-500 mr-1"></i> Kode QR / Barcode
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="form-kode-qr" name="kode_qr" placeholder="Scan QR atau ketik manual"
+                                class="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400">
+                            <button type="button" onclick="bukaModalQrScan('tambah')"
+                                class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-xl transition">
+                                <i class="fas fa-camera mr-1"></i> Scan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== BARIS 4: GPS (P14) ====== -->
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-map-pin text-blue-500 mr-1"></i> Titik Lokasi Gudang
+                        </label>
+                        <button type="button" id="btn-lacak-gps" onclick="dapatkanLokasi()"
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl transition mb-2">
+                            <i class="fas fa-satellite mr-1"></i> Lacak GPS Saya
+                        </button>
+                        <div class="flex gap-2">
+                            <input type="text" id="form-latitude" name="latitude" placeholder="Latitude" readonly
+                                class="w-1/2 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none">
+                            <input type="text" id="form-longitude" name="longitude" placeholder="Longitude" readonly
+                                class="w-1/2 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Submit -->
+                <button type="submit" id="btn-submit"
+                    class="bg-gradient-to-r from-teal-500 to-cyan-500 hover:scale-105 transition text-white font-semibold px-5 py-3 rounded-xl shadow-lg">
+                    <i class="fas fa-save mr-2"></i> Simpan
+                </button>
+            </form>
+        </div>
+
+        <!-- ==================== DASHBOARD CHART ==================== -->
+        <div id="dashboard" class="bg-white/80 backdrop-blur-lg shadow-xl rounded-3xl p-6 mb-8 border border-white/40">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700">
+                    <i class="fas fa-chart-bar text-teal-500 mr-2"></i> Dashboard - Top 5 Barang Termahal
+                </h2>
+                <div class="flex gap-2">
+                    <select id="chartType"
+                        class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-400 text-sm">
+                        <option value="bar">📊 Bar Chart</option>
+                        <option value="pie">🥧 Pie Chart</option>
+                        <option value="doughnut">🍩 Doughnut Chart</option>
+                        <option value="line">📈 Line Chart</option>
+                    </select>
+                    <button onclick="refreshChart()"
+                        class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-xl transition">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="w-full max-w-4xl mx-auto" style="position: relative; height: 350px;">
+                <canvas id="myChart"></canvas>
+            </div>
+            <p class="text-xs text-gray-400 text-center mt-4">
+                <i class="fas fa-info-circle mr-1"></i>
+                Menampilkan 5 barang dengan harga tertinggi.
+                <span id="totalBarangInfo"></span>
+            </p>
+        </div>
+
+        <!-- ==================== SEARCH & PAGINATION ==================== -->
+        <div class="bg-white/80 backdrop-blur-lg shadow-xl rounded-3xl p-6 mb-8 border border-white/40">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <div class="flex-1 w-full">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="inputCari" placeholder="🔍 Cari barang... (ketik untuk mencari)"
+                            class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center flex-shrink-0">
+                    <button id="btnPrev"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Prev
+                    </button>
+                    <span id="infoHalaman" class="text-sm text-gray-600 font-medium px-3 min-w-[120px] text-center">
+                        Halaman 1 / 1
+                    </span>
+                    <button id="btnNext"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="mt-3 text-xs text-gray-400 flex justify-between">
+                <span id="infoTotalData">Total data: 0</span>
+                <span id="infoShowing">Menampilkan 0-0 dari 0</span>
+            </div>
+        </div>
+
+        <!-- ==================== DATA BARANG ==================== -->
+        <div class="bg-white/80 backdrop-blur-lg shadow-xl rounded-3xl p-6 border border-white/40">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-3 mb-5">
+                <h2 class="text-2xl font-semibold text-gray-700">
+                    <i class="fas fa-boxes text-teal-500 mr-2"></i> Data Barang
+                </h2>
+                <button onclick="fetchData(currentKeyword || '', currentPage || 1)"
+                    class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-xl transition transform hover:scale-105">
+                    <i class="fas fa-sync-alt mr-2"></i> Refresh
+                </button>
+            </div>
+
+            <!-- LOADING -->
+            <div id="loading" class="hidden text-center py-5">
+                <div class="inline-flex items-center gap-2 text-teal-600 font-medium">
+                    <svg class="animate-spin h-5 w-5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    Memuat data...
+                </div>
+            </div>
+
+            <!-- ERROR -->
+            <div id="error" class="hidden bg-red-100 text-red-600 p-4 rounded-xl mb-4">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Gagal memuat data
+            </div>
+
+            <!-- TABLE -->
+            <div class="overflow-x-auto">
+                <table class="w-full border-separate border-spacing-y-3">
+                    <thead>
+                        <tr class="text-left text-gray-600">
+                            <th class="px-4 py-2">No</th>
+                            <th class="px-4 py-2">Nama / QR</th>
+                            <th class="px-4 py-2">Gambar</th>
+                            <th class="px-4 py-2">Harga</th>
+                            <th class="px-4 py-2">Stok</th>
+                            <th class="px-4 py-2">📍 Lokasi</th>
+                            <th class="px-4 py-2">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="daftar-barang">
+                        <tr>
+                            <td colspan="7" class="text-center text-gray-400 py-6">
+                                <i class="fas fa-database mr-2"></i> Loading data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== FOOTER ==================== -->
+        <div class="text-center mt-8 text-gray-500 text-sm">
+            <i class="fas fa-mobile-alt mr-1"></i> Progressive Web App (PWA)
+            <i class="fas fa-shield-alt mx-1"></i> Token Authentication
+            <i class="fas fa-qrcode mx-1 text-purple-500"></i> Smart QR Gateway
+            <i class="fas fa-satellite mx-1 text-blue-500"></i> GPS Location
+        </div>
+
+    </div>
+
+    <!-- ==================== MODAL QR SCANNER (P14) ==================== -->
+    <div id="modal-qr-scan"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-xl font-bold text-gray-800" id="qr-modal-title">📷 QR Scanner</h3>
+                <button onclick="tutupModalQrScan()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6">
+                <p class="text-sm text-gray-500 mb-4" id="qr-modal-hint"></p>
+
+                <!-- Area Kamera -->
+                <div id="qr-reader-main" class="bg-gray-100 rounded-xl overflow-hidden"></div>
+
+                <!-- Kotak Status -->
+                <div id="qr-status-box" class="mt-4 hidden">
+                    <div id="qr-scanned-text" class="text-sm font-mono bg-gray-100 p-2 rounded text-center mb-3"></div>
+
+                    <!-- State Loading -->
+                    <div id="qr-state-loading" class="hidden text-center py-4">
+                        <div
+                            class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-teal-500 border-t-transparent">
+                        </div>
+                        <p class="mt-2 text-gray-600">⏳ Memeriksa database...</p>
+                    </div>
+
+                    <!-- State Found (Hijau) -->
+                    <div id="qr-state-found" class="hidden bg-green-50 border border-green-300 rounded-xl p-4">
+                        <p class="text-green-700 font-bold">✅ Barang Ditemukan!</p>
+                        <p class="text-lg font-semibold" id="qr-found-nama"></p>
+                        <p class="text-teal-600 font-bold" id="qr-found-harga"></p>
+                        <button onclick="eksekusiQrFound()"
+                            class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-search mr-1"></i> Tampilkan di Tabel
+                        </button>
+                    </div>
+
+                    <!-- State Not Found (Kuning) -->
+                    <div id="qr-state-notfound" class="hidden bg-yellow-50 border border-yellow-300 rounded-xl p-4">
+                        <p class="text-yellow-700 font-bold">📦 Barang Belum Terdaftar</p>
+                        <p class="text-sm text-gray-600 mt-1">Kode QR ini belum ada di database.</p>
+                        <button onclick="eksekusiQrTambah()"
+                            class="mt-3 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-plus mr-1"></i> Tambah Barang Baru
+                        </button>
+                    </div>
+
+                    <!-- Tombol Scan Ulang -->
+                    <button onclick="resetQrScanner()"
+                        class="mt-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition w-full">
+                        <i class="fas fa-redo mr-1"></i> Scan Ulang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js CDN (Backup) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- App.js -->
+    <script src="app.js?v=15"></script>
+</body>
+
+</html>
